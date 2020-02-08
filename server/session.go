@@ -20,7 +20,7 @@ const (
 type roomState struct {
 	VideoURL     string   `json:"videoURL,omitempty"`
 	CurrentState int      `json:"currentState,omitempty"`
-	TimeStamp    int      `json:"timeStamp,omitempty"`
+	TimeStamp    float64  `json:"timeStamp,omitempty"`
 	UIDs         []string `json:"uids,omitempty"`
 }
 

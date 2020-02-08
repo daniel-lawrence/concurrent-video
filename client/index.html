@@ -13,6 +13,9 @@
         '5': 'video cued'
       };
 
+      var roomId = null;
+      var socket = null;
+
       // 2. This code loads the IFrame Player API code asynchronously.
       var tag = document.createElement('script');
 
@@ -30,60 +33,140 @@
           videoId: 'M7lc1UVf-VE',
           events: {
             onReady: onPlayerReady,
-            onStateChange: onPlayerStateChange
+            onStateChange: onPlayerStateChange,
+            onError: function(e) {
+              console.log(e);
+            }
           }
         });
+      }
+
+      function getState() {
+        if (!player) {
+          return;
+        }
+        let playerState = player.getPlayerState();
+        if (playerState == -1) {
+          playerState = 2;
+        }
+        const foundState = {
+          videoURL: player.getVideoUrl(),
+          currentState: playerState,
+          timeStamp: player.getCurrentTime(),
+        };
+        console.log('getState got:', foundState);
+        return foundState;
+      }
+
+      function setState(state) {
+        console.log('STATE: setting state', state);
+        player.onStateChange = null;
+
+        const playerState = player.getPlayerState();
+        if (playerState != 1 && state.currentState == 1) {
+          player.playVideo();
+        } else if (playerState == 1 && (state.currentState == 2 || state.currentState == 0 || state.currentState == -1)) {
+          player.pauseVideo();
+        }
+
+        const currentTime = player.getCurrentTime();
+        if (state.timeStamp && Math.abs(currentTime - state.timeStamp) > 2) {
+          player.seekTo(state.timeStamp, true);
+        }
+
+        // if (state.videoURL != player.getVideoUrl()) {
+        //   player.loadVideoByUrl(state.videoURL, state.timeStamp);
+        // }
+
+        player.onStateChange = onPlayerStateChange;
       }
 
       // 4. The API will call this function when the video player is ready.
       function onPlayerReady(event) {
         event.target.playVideo();
-        player.seekTo(1, true);
+        player.allowStateChanges = true;
+
+        function joinRoom() {
+          socket = new WebSocket(`ws://localhost:8080/rooms/${roomId}`);
+
+          socket.onopen = function(e) {
+          };
+
+          socket.onmessage = function(event) {
+            const newState = JSON.parse(event.data);
+            if (player.lastStateChange) {
+              if (
+                player.lastStateChange.videoURL == newState.videoURL &&
+                player.lastStateChange.currentState == newState.currentState &&
+                player.lastStateChange.timeStamp == newState.timeStamp
+              ) {
+                return;
+              }
+            }
+            setState(JSON.parse(event.data));
+          };
+
+          socket.onclose = function(event) {
+            if (event.wasClean) {
+            } else {
+              // e.g. server process killed or network down
+              // event.code is usually 1006 in this case
+            }
+            socket = null;
+          };
+
+          socket.onerror = function(error) {
+          };
+        }
+
+        if (window.location.search) {
+          // a room ID is already set
+          roomId = window.location.search.substring(1);
+          joinRoom();
+        } else {
+          // create a new room
+          var roomRequest = new XMLHttpRequest();
+          roomRequest.open('POST', 'http://localhost:8080/rooms/new');
+
+          roomRequest.onload = function() {
+            roomId = roomRequest.responseText;
+            // set room ID in address and reload page
+            window.location.search = roomId;
+          }
+
+          roomRequest.onerror = function(e) {
+            console.error(roomRequest.statusText);
+          }
+
+          roomRequest.send(null);
+        }
       }
 
       // 5. The API calls this function when the player's state changes.
       //    The function indicates that when playing a video (state=1),
       //    the player should play for six seconds and then stop.
-      var done = false;
       function onPlayerStateChange(event) {
         // send a message to server with state and timestamp
-        console.log(player.getVideoUrl());
-        console.log(playerStates[event.data]);
-        console.log(player.getCurrentTime().toString() + 's');
-        if (event.data == YT.PlayerState.PLAYING && !done) {
-          setTimeout(stopVideo, 6000);
-          done = true;
+
+        if (socket) {
+          const newState = getState();
+          console.log('Video URL is', newState.videoURL);
+          if (player.lastStateChange) {
+            if (
+              player.lastStateChange.videoURL == newState.videoURL &&
+              player.lastStateChange.currentState == newState.currentState &&
+              player.lastStateChange.timeStamp == newState.timeStamp
+            ) {
+              return;
+            }
+          }
+          socket.send(JSON.stringify(newState));
         }
       }
       function stopVideo() {
         player.stopVideo();
       }
 
-      let socket = new WebSocket('ws://localhost:8080/rooms/12345');
-
-      socket.onopen = function(e) {
-        alert("[open] Connection established");
-        alert("Sending to server");
-        socket.send("My name is John");
-      };
-
-      socket.onmessage = function(event) {
-        alert(`[message] Data received from server: ${event.data}`);
-      };
-
-      socket.onclose = function(event) {
-        if (event.wasClean) {
-          alert(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-        } else {
-          // e.g. server process killed or network down
-          // event.code is usually 1006 in this case
-          alert('[close] Connection died');
-        }
-      };
-
-      socket.onerror = function(error) {
-        alert(`[error] ${error.message}`);
-      };
     </script>
   </body>
 </html>

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
 	"net/http"
 	"server/path"
@@ -41,37 +40,38 @@ func main() {
 			return
 		}
 
-		if pathVars, ok := newRoomPath.Match(r.Method, r.URL.Path); ok {
-			log.Println(pathVars)
-			log.Println("New room")
+		if _, ok := newRoomPath.Match(r.Method, r.URL.Path); ok {
+			roomID := newRoom()
+			log.Printf("Created new room: %s\n", roomID)
+			w.Write([]byte(roomID))
+			return
 		}
 
 		if pathVars, ok := joinPath.Match(r.Method, r.URL.Path); ok {
-			log.Println(pathVars)
-			log.Println("Join room")
-			log.Printf("Room ID: %s\n", pathVars["roomId"])
+			roomID, ok := pathVars["roomId"]
+			if !ok {
+				http.Error(w, "No room ID supplied", http.StatusBadRequest)
+				return
+			}
+			log.Printf("Request to join room with ID %s\n", roomID)
+
+			room, ok := rooms[roomID]
+			if !ok {
+				http.Error(w, "Room not found", http.StatusNotFound)
+				return
+			}
+
 			conn, err := wsUpgrader.Upgrade(w, r, nil)
 			if err != nil {
 				log.Println(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			conn.WriteJSON("Hello!")
-		}
-		data, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			room.communicateState(conn)
+
 			return
 		}
-		log.Println(data)
-		// outBytes, err := json.Marshal(output)
-		// if err != nil {
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
-		// w.Write(outBytes)
-
-		w.WriteHeader(200)
+		http.Error(w, "No API method found", http.StatusNotFound)
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", nil))

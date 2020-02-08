@@ -1,13 +1,10 @@
-package paths
+package path
 
 import (
 	"fmt"
 	"log"
 	"strings"
 )
-
-// PathVars is an alias for map[string]string, used for captured path variables.
-type PathVars map[string]string
 
 // An APIPath represents a specified path and method, such as GET/users/{uuid}.
 type APIPath struct {
@@ -31,7 +28,7 @@ func NewAPIPath(path string) (*APIPath, error) {
 
 // Match tests an APIPath against a path string, and returns a map of path
 // variables and a boolean representing whether it was a match.
-func (a *APIPath) Match(method, path string) (pathVars PathVars, ok bool) {
+func (a *APIPath) Match(method, path string) (pathVars map[string]string, ok bool) {
 	log.Println(method, path)
 	if method != a.Method {
 		return

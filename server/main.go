@@ -4,12 +4,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"server/paths"
+	"server/path"
 
 	"github.com/gorilla/websocket"
 )
 
-var endpoints []*paths.APIPath
+var endpoints []*path.APIPath
 
 var wsUpgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -20,11 +20,11 @@ var wsUpgrader = websocket.Upgrader{
 }
 
 func main() {
-	newRoomPath, err := paths.NewAPIPath("POST/rooms/new")
+	newRoomPath, err := path.NewAPIPath("POST/rooms/new")
 	if err != nil {
 		log.Fatal(err)
 	}
-	joinPath, err := paths.NewAPIPath("GET/rooms/{roomId}")
+	joinPath, err := path.NewAPIPath("GET/rooms/{roomId}")
 	if err != nil {
 		log.Fatal(err)
 	}

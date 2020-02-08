@@ -1,23 +1,22 @@
-package paths_test
+package path_test
 
 import (
+	"server/path"
 	"testing"
-
-	"server/paths"
 )
 
 func TestPathMatching(t *testing.T) {
-	_, err := paths.NewAPIPath("")
+	_, err := path.NewAPIPath("")
 	if err == nil {
 		t.Error("Expected error")
 	}
 
-	_, err = paths.NewAPIPath("GET/")
+	_, err = path.NewAPIPath("GET/")
 	if err != nil {
 		t.Error(err)
 	}
 
-	apiPath, err := paths.NewAPIPath("GET/test/one/two")
+	apiPath, err := path.NewAPIPath("GET/test/one/two")
 	if err != nil {
 		t.Error(err)
 	}
@@ -49,7 +48,7 @@ func TestPathMatching(t *testing.T) {
 }
 
 func TestPathVariables(t *testing.T) {
-	apiPath, err := paths.NewAPIPath("POST/test/{foo}/user/{uid}")
+	apiPath, err := path.NewAPIPath("POST/test/{foo}/user/{uid}")
 	if err != nil {
 		t.Error(err)
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
@@ -28,6 +29,7 @@ type sharedRoom struct {
 	roomState
 	connected []*websocket.Conn
 	stateLock *sync.Mutex
+	roomID    string
 }
 
 var rooms map[string]*sharedRoom
@@ -43,6 +45,7 @@ func newRoom() (id string) {
 			CurrentState: playerUnstarted,
 		},
 		stateLock: &sync.Mutex{},
+		roomID:    id,
 	}
 	rooms[id] = &room
 	return id
@@ -57,15 +60,38 @@ func (r *sharedRoom) communicateState(conn *websocket.Conn) {
 
 	go func() {
 		defer conn.Close()
-		for {
-			// If a state already exists, push as update
-			if r.roomState.VideoURL != "" {
-				err := conn.WriteJSON(r.roomState)
-				if err != nil {
-					log.Printf("Error sending initial state: %v\n", err)
+		// If a state already exists, push as update
+		if r.roomState.VideoURL != "" {
+			err := conn.WriteJSON(r.roomState)
+			if err != nil {
+				log.Printf("Error sending initial state: %v\n", err)
+			}
+		}
+
+		conn.SetCloseHandler(func(code int, text string) error {
+			// remove the conn from the room's list of connections
+			r.stateLock.Lock()
+			for i, c := range r.connected {
+				if c == conn {
+					r.connected = append(r.connected[:i], r.connected[i+1:]...)
+					break
 				}
 			}
+			log.Printf("Removed client - %d clients connected to room\n", len(r.connected))
+			r.stateLock.Unlock()
 
+			if len(r.connected) == 0 {
+				log.Printf("Removing room %s\n", r.roomID)
+				delete(rooms, r.roomID)
+			}
+
+			// write standard close message
+			message := websocket.FormatCloseMessage(code, "")
+			conn.WriteControl(websocket.CloseMessage, message, time.Now().Add(time.Second))
+			return nil
+		})
+
+		for {
 			// Read an incoming state change messages
 			stateUpdate := roomState{}
 			err := conn.ReadJSON(&stateUpdate)

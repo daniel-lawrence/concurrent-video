@@ -58,6 +58,7 @@ func main() {
 			room, ok := rooms[roomID]
 			if !ok {
 				http.Error(w, "Room not found", http.StatusNotFound)
+				log.Printf("Room %s requested but does not exist\n", roomID)
 				return
 			}
 

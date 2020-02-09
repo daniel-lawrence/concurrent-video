@@ -20,12 +20,8 @@ window.onYouTubeIframeAPIReady = function () {
   //   window.ytPlayer.destroy();
   // }
   window.ytPlayer = new YT.Player('player', {
-    height: '390',
-    width: '640',
     events: {
-      onError: function (e) {
-        console.log(e);
-      }
+      onError: console.error,
     }
   });
   videoSync = new VideoSync(ytPlayer);
@@ -46,23 +42,13 @@ window.loadVideo = function (videoId, timestamp) {
 };
 
 window.submitSearch = () => {
-
-  // console.log(gapi.client.youtube.search.list("test", {maxResults: 5}));
-
   const searchValue = document.getElementById('search').value;
-  var request = gapi.client.youtube.search.list({
+  gapi.client.youtube.search.list({
     part: 'snippet',
     q: searchValue,
-    maxResults: 5
-  });
-
-  request.execute(function(response) {
-    id = response.result.items[0].id.videoId;
-    console.log(id);
-    loadVideo(id);
-  })
-
-  // loadVideo(searchValue);
+    maxResults: 5,
+    type: 'video',
+  }).then(response => loadVideo(response.result.items[0].id.videoId));
   return false;
 };
 
@@ -75,7 +61,7 @@ window.onPlayerReady = () => {
   if (!window.roomId) {
     // create a new room
     var roomRequest = new XMLHttpRequest();
-    roomRequest.open('POST', 'http://localhost:8080/rooms/new');
+    roomRequest.open('POST', `http://${window.location.hostname}:8080/rooms/new`);
 
     roomRequest.onload = () => {
       window.roomId = roomRequest.responseText;
@@ -93,7 +79,7 @@ window.onPlayerReady = () => {
 
 window.onRoomId = () => {
   window.syncSocket = new WebSocket(
-    `ws://localhost:8080/rooms/${window.roomId}`
+    `ws://${window.location.hostname}:8080/rooms/${window.roomId}`
   );
 
   window.syncSocket.onopen = () => { };

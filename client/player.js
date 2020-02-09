@@ -46,10 +46,23 @@ window.loadVideo = function (videoId, timestamp) {
 };
 
 window.submitSearch = () => {
-  console.log(gapi.client);
-  console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
+
+  // console.log(gapi.client.youtube.search.list("test", {maxResults: 5}));
+
   const searchValue = document.getElementById('search').value;
-  loadVideo(searchValue);
+  var request = gapi.client.youtube.search.list({
+    part: 'snippet',
+    q: searchValue,
+    maxResults: 5
+  });
+
+  request.execute(function(response) {
+    id = response.result.items[0].id.videoId;
+    console.log(id);
+    loadVideo(id);
+  })
+
+  // loadVideo(searchValue);
   return false;
 };
 

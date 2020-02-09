@@ -32,17 +32,19 @@
   <script src="player.js"></script>
   <script src=".env"></script>
   <script>
-    window.googleApiClientReady = function () {
-      const loadApi = function () {
-        return new Promise(function (resolve, reject) {
-          gapi.client.setApiKey(YT_API_KEY);
-          gapi.client.load('youtube', 'v3', resolve);
-        });
-      };
-      loadApi();
+    function initClient() {
+      gapi.client.init({
+        'apiKey': YT_API_KEY,
+      }).then(function() {
+        gapi.client.load('youtube', 'v3');
+      })
+    }
+
+    function loadClient() {
+      gapi.load('client', initClient);
     }
   </script>
-  <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
+  <script async defer src="https://apis.google.com/js/api.js" onload="this.onload=function(){};loadClient()"></script>
 </body>
 
 </html>

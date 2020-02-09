@@ -1,8 +1,51 @@
 <html>
-  <body>
-    <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
-    <div id="player"></div>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <link rel="stylesheet" href="index.css" />
+  </head>
 
-    <script src="index.js"></script>
+  <body class="grey darken-4">
+    <nav class="grey darken-2">
+      <div class="nav-wrapper">
+        <form id="searchform" onsubmit="return submitSearch()">
+          <div class="input-field">
+            <input id="search" type="search" required />
+            <label class="label-icon" for="search">
+              <i class="material-icons">search</i>
+            </label>
+            <i class="material-icons">close</i>
+          </div>
+        </form>
+      </div>
+    </nav>
+
+    <main id="main" class="container">
+      <div id="player_container" class="col s12">
+        <div id="player"></div>
+      </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="init.js"></script>
+    <script src="player.js"></script>
+    <script>
+      window.googleApiClientReady = function() {
+        const loadApi = function() {
+          return new Promise(function(resolve, reject) {
+            gapi.client.setApiKey('AIzaSyBi775gBjOibiTVM23gpiqHRf8MUcaQXDg');
+            gapi.client.load('youtube', 'v3', resolve);
+          });
+        };
+        loadApi();
+      }
+    </script>
+    <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
   </body>
 </html>

@@ -37,7 +37,7 @@ func newRoom() (id string) {
 	if rooms == nil {
 		rooms = make(map[string]*sharedRoom)
 	}
-	id = uuid.NewV4().String()
+	id = uuid.NewV4().String() // TODO: replace with random words
 	room := sharedRoom{
 		roomState: roomState{
 			CurrentState: playerUnstarted,
@@ -58,6 +58,14 @@ func (r *sharedRoom) communicateState(conn *websocket.Conn) {
 	go func() {
 		defer conn.Close()
 		for {
+			// If a state already exists, push as update
+			if r.roomState.VideoURL != "" {
+				err := conn.WriteJSON(r.roomState)
+				if err != nil {
+					log.Printf("Error sending initial state: %v\n", err)
+				}
+			}
+
 			// Read an incoming state change messages
 			stateUpdate := roomState{}
 			err := conn.ReadJSON(&stateUpdate)

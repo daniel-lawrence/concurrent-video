@@ -71,13 +71,14 @@ func (r *sharedRoom) communicateState(conn *websocket.Conn) {
 			// take room state lock
 			r.stateLock.Lock()
 			r.roomState = stateUpdate
-			for _, otherClient := range r.connected {
+			for i, otherClient := range r.connected {
 				if conn == otherClient {
 					continue
 				}
 				err = otherClient.WriteJSON(stateUpdate)
 				if err != nil {
 					log.Printf("Error updating other client state: %v\n", err)
+					r.connected = append(r.connected[:i], r.connected[i+1:]...)
 				}
 			}
 			r.stateLock.Unlock()

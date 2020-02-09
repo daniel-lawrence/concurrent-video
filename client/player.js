@@ -15,7 +15,7 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 // 3. This function creates an <iframe> (and YouTube player)
 //    after the API code downloads.
-window.onYouTubeIframeAPIReady = function() {
+window.onYouTubeIframeAPIReady = function () {
   // if (window.ytPlayer) {
   //   window.ytPlayer.destroy();
   // }
@@ -23,7 +23,7 @@ window.onYouTubeIframeAPIReady = function() {
     height: '390',
     width: '640',
     events: {
-      onError: function(e) {
+      onError: function (e) {
         console.log(e);
       }
     }
@@ -39,14 +39,14 @@ window.onYouTubeIframeAPIReady = function() {
   setTimeout(window.onPlayerCreated, 1000);
 };
 
-window.loadVideo = function(videoId, timestamp) {
+window.loadVideo = function (videoId, timestamp) {
   console.log(window.ytPlayer);
   window.ytPlayer.loadVideoById(videoId, timestamp);
   window.ytPlayer.videoId = videoId;
 };
 
 window.submitSearch = () => {
-  console.log(gapi.client.youtube);
+  console.log(gapi.client);
   console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
   const searchValue = document.getElementById('search').value;
   loadVideo(searchValue);
@@ -70,7 +70,7 @@ window.onPlayerReady = () => {
       window.onRoomId();
     };
 
-    roomRequest.onerror = function(e) {
+    roomRequest.onerror = function (e) {
       console.error(roomRequest.statusText);
     };
 
@@ -83,7 +83,7 @@ window.onRoomId = () => {
     `ws://localhost:8080/rooms/${window.roomId}`
   );
 
-  window.syncSocket.onopen = () => {};
+  window.syncSocket.onopen = () => { };
 
   window.syncSocket.onmessage = event => {
     window.ytPlayer.videoSync.setState(JSON.parse(event.data));

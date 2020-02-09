@@ -23,7 +23,7 @@ window.onYouTubeIframeAPIReady = function () {
     height: '390',
     width: '640',
     events: {
-      onError: function(e) {
+      onError: function (e) {
         console.log(e);
       }
     }
@@ -64,7 +64,7 @@ window.onPlayerReady = () => {
       window.onRoomId();
     }
 
-    roomRequest.onerror = function(e) {
+    roomRequest.onerror = function (e) {
       console.error(roomRequest.statusText);
     }
 
@@ -75,7 +75,7 @@ window.onPlayerReady = () => {
 window.onRoomId = () => {
   window.syncSocket = new WebSocket(`ws://localhost:8080/rooms/${window.roomId}`);
 
-  window.syncSocket.onopen = () => {};
+  window.syncSocket.onopen = () => { };
 
   window.syncSocket.onmessage = (event => {
     window.ytPlayer.videoSync.setState(JSON.parse(event.data));

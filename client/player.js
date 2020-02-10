@@ -44,11 +44,18 @@ window.loadVideo = function (videoId, timestamp) {
 window.submitSearch = () => {
   const searchValue = document.getElementById('search').value;
   const searchQuery = new XMLHttpRequest();
-  searchQuery.open('GET', `https://api.${window.location.hostname}/youtube/${searchValue}`);
+  searchQuery.open('GET', `http://${window.location.hostname}:8080/youtube/${searchValue}`);
 
-  searchQuery.onload = () => (
+  searchQuery.onload = () => {
+
+    JSON.parse(searchQuery.responseText).items.forEach(item => {
+      elem = document.createElement('li');
+      elem.innerHTML = `<div class="row result"><div class="center-align col s12">${item.snippet.channelTitle}</div><div class="valign-wrapper snippet col s7"><div class="center-align">${item.snippet.title}</div></div><div class="col s5"><img src=${item.snippet.thumbnails.default.url}></div></div>`;
+      document.getElementById('slide-out').appendChild(elem);
+    });
+
     loadVideo(JSON.parse(searchQuery.responseText).items[0].id.videoId)
-  );
+  };
   searchQuery.onerror = () => console.error(searchQuery.statusText);
   searchQuery.send(null);
   return false;
@@ -63,7 +70,7 @@ window.onPlayerReady = () => {
   if (!window.roomId) {
     // create a new room
     var roomRequest = new XMLHttpRequest();
-    roomRequest.open('POST', `https://api.${window.location.hostname}/rooms/new`);
+    roomRequest.open('POST', `http://${window.location.hostname}:8080/rooms/new`);
 
     roomRequest.onload = () => {
       window.roomId = roomRequest.responseText;
@@ -81,7 +88,7 @@ window.onPlayerReady = () => {
 
 window.onRoomId = () => {
   window.syncSocket = new WebSocket(
-    `wss://api.${window.location.hostname}/rooms/${window.roomId}`
+    `ws://${window.location.hostname}:8080/rooms/${window.roomId}`
   );
 
   window.syncSocket.onopen = () => { };

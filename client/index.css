@@ -32,6 +32,7 @@
 .result {
   line-height: normal;
   font-size: medium;
+  border-left: 5px solid #ee6e73;
 }
 
 .result .divider {
@@ -41,5 +42,4 @@
 .result .snippet {
   height: 90px;
   padding: 0;
-  border-left: 5px solid #ee6e73;
 }

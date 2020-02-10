@@ -48,7 +48,16 @@ window.submitSearch = () => {
     q: searchValue,
     maxResults: 5,
     type: 'video',
-  }).then(response => loadVideo(response.result.items[0].id.videoId));
+  }).then(response => {
+    
+    console.log(response.result.items);
+
+    response.result.items.forEach(item => {
+
+    });
+
+    loadVideo(response.result.items[0].id.videoId);
+  });
   return false;
 };
 

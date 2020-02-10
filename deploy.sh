@@ -1,6 +1,6 @@
 #!/bin/bash
 
-REMOTE=root@ccv.slambast.com
+REMOTE=root@concurrent.video
 
 function buildGoPkg() {
     cd $1

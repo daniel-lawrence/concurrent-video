@@ -1,0 +1,12 @@
+[Unit]
+Description=Concurrent Video Backend Server
+
+[Service]
+Type=simple
+ExecStart=/srv/ccv/bin/server
+WorkingDirectory=/srv/ccv/creds
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

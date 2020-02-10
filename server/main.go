@@ -27,8 +27,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	searchYoutube, err := path.NewAPIPath("GET/youtube/{query}")
+	if err != nil {
+		log.Fatal(err)
+	}
 	endpoints = append(endpoints, newRoomPath)
 	endpoints = append(endpoints, joinPath)
+	endpoints = append(endpoints, searchYoutube)
 
 	// Start API server
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -70,6 +75,24 @@ func main() {
 			}
 			room.communicateState(conn)
 
+			return
+		}
+
+		if pathVars, ok := searchYoutube.Match(r.Method, r.URL.Path); ok {
+			query, ok := pathVars["query"]
+			if !ok {
+				http.Error(w, "No query supplied", http.StatusBadRequest)
+				return
+			}
+
+			response, err := searchVideos(query)
+			if err != nil {
+				log.Println(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(response)
 			return
 		}
 		http.Error(w, "No API method found", http.StatusNotFound)

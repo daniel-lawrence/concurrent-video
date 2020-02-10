@@ -43,21 +43,14 @@ window.loadVideo = function (videoId, timestamp) {
 
 window.submitSearch = () => {
   const searchValue = document.getElementById('search').value;
-  gapi.client.youtube.search.list({
-    part: 'snippet',
-    q: searchValue,
-    maxResults: 5,
-    type: 'video',
-  }).then(response => {
-    
-    console.log(response.result.items);
+  const searchQuery = new XMLHttpRequest();
+  searchQuery.open('GET', `https://api.${window.location.hostname}/youtube/${searchValue}`);
 
-    response.result.items.forEach(item => {
-
-    });
-
-    loadVideo(response.result.items[0].id.videoId);
-  });
+  searchQuery.onload = () => (
+    loadVideo(JSON.parse(searchQuery.responseText).items[0].id.videoId)
+  );
+  searchQuery.onerror = () => console.error(searchQuery.statusText);
+  searchQuery.send(null);
   return false;
 };
 
@@ -70,7 +63,7 @@ window.onPlayerReady = () => {
   if (!window.roomId) {
     // create a new room
     var roomRequest = new XMLHttpRequest();
-    roomRequest.open('POST', `http://${window.location.hostname}:8080/rooms/new`);
+    roomRequest.open('POST', `https://api.${window.location.hostname}/rooms/new`);
 
     roomRequest.onload = () => {
       window.roomId = roomRequest.responseText;
@@ -88,7 +81,7 @@ window.onPlayerReady = () => {
 
 window.onRoomId = () => {
   window.syncSocket = new WebSocket(
-    `ws://${window.location.hostname}:8080/rooms/${window.roomId}`
+    `wss://api.${window.location.hostname}/rooms/${window.roomId}`
   );
 
   window.syncSocket.onopen = () => { };

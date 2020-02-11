@@ -51,13 +51,39 @@ window.submitSearch = () => {
   }
 
   searchQuery.onload = () => {
+    elem_bak = []
     JSON.parse(searchQuery.responseText).items.forEach(item => {
-      elem = document.createElement('li');
-      elem.innerHTML = `<div class="row result"><div class="center-align col s12">${item.snippet.channelTitle}</div><div class="valign-wrapper snippet col s7"><div class="center-align">${item.snippet.title}</div></div><div class="col s5"><img src=${item.snippet.thumbnails.default.url}></div></div>`;
-      document.getElementById('slide-out').appendChild(elem);
+      li = document.createElement('li');
+      li.innerHTML = `<button class="row result waves-effect waves-dark btn black-text white"><div class="center-align col s12">${item.snippet.channelTitle}</div><div class="divider col s12"></div><div class="valign-wrapper snippet col s7"><div class="center-align">${item.snippet.title}</div></div><div class="col s5"><img src=${item.snippet.thumbnails.default.url}></div></button>`;
+      li.onclick = () => {
+        loadVideo(item.id.videoId);
+        document.getElementById('search').value = "";
+        elem_bak.forEach(elem => elem.remove());
+        M.Sidenav.getInstance(document.getElementById("slide-out")).close();
+      };
+      elem_bak.push(li);
+      document.getElementById('slide-out').appendChild(li);
     });
   };
-  searchQuery.onerror = () => console.error(searchQuery.statusText);
+
+  searchQuery.onerror = () => {
+    // console.log(test_data.items);
+
+    // elem_bak = []
+    // test_data.items.forEach(item => {
+    //   li = document.createElement('li');
+    //   li.innerHTML = `<button class="row result waves-effect waves-dark btn black-text white"><div class="center-align col s12">${item.snippet.channelTitle}</div><div class="divider col s12"></div><div class="valign-wrapper snippet col s7"><div class="center-align">${item.snippet.title}</div></div><div class="col s5"><img src=${item.snippet.thumbnails.default.url}></div></button>`;
+    //   li.onclick = () => {
+    //     loadVideo(item.id.videoId);
+    //     document.getElementById('search').value = "";
+    //     elem_bak.forEach(elem => elem.remove());
+    //     M.Sidenav.getInstance(document.getElementById("slide-out")).close();
+    //   };
+    //   elem_bak.push(li);
+    //   document.getElementById('slide-out').appendChild(li);
+    // });
+    console.error(searchQuery.statusText);
+  };
   searchQuery.send(null);
   return false;
 };

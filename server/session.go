@@ -2,11 +2,13 @@ package main
 
 import (
 	"log"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
-	uuid "github.com/satori/go.uuid"
+	"github.com/sethvargo/go-diceware/diceware"
+	// uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -39,7 +41,19 @@ func newRoom() (id string) {
 	if rooms == nil {
 		rooms = make(map[string]*sharedRoom)
 	}
-	id = uuid.NewV4().String() // TODO: replace with random words
+
+	dice, _ := diceware.Generate(3)
+	id = strings.Join(dice, " ")
+	id = strings.ReplaceAll(strings.Title(id), " ", "")
+
+	for rooms[id] != nil {
+		dice, _ = diceware.Generate(3)
+		id = strings.Join(dice, " ")
+		id = strings.ReplaceAll(strings.Title(id), " ", "")
+	}
+
+	// log.Printf(strings.Join(list,""))
+	// id = uuid.NewV4().String() // TODO: replace with random words
 	room := sharedRoom{
 		roomState: roomState{
 			CurrentState: playerUnstarted,

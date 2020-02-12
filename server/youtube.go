@@ -27,7 +27,7 @@ func searchVideos(query string) ([]byte, error) {
 		return nil, err
 	}
 
-	searchResults, err := youtubeService.Search.List("snippet").Q(query).MaxResults(5).Type("video").Do()
+	searchResults, err := youtubeService.Search.List("snippet").Q(query).MaxResults(16).Type("video").Do()
 	if err != nil {
 		return nil, err
 	}

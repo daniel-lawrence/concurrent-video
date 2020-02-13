@@ -29,7 +29,6 @@ func NewAPIPath(path string) (*APIPath, error) {
 // Match tests an APIPath against a path string, and returns a map of path
 // variables and a boolean representing whether it was a match.
 func (a *APIPath) Match(method, path string) (pathVars map[string]string, ok bool) {
-	log.Println(method, path)
 	if method != a.Method {
 		return
 	}
@@ -52,5 +51,6 @@ func (a *APIPath) Match(method, path string) (pathVars map[string]string, ok boo
 			return nil, false
 		}
 	}
+	log.Println(method, path)
 	return pathVars, true
 }

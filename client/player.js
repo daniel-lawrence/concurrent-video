@@ -1,4 +1,7 @@
 const { VideoSync } = require('./sync.js');
+const testData = require('./testData.json');
+const Request = require('./request.js');
+
 var playerStates = {
   '-1': 'unstarted',
   '0': 'ended',
@@ -13,12 +16,21 @@ tag.src = 'https://www.youtube.com/iframe_api';
 var firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-// 3. This function creates an <iframe> (and YouTube player)
-//    after the API code downloads.
+document.addEventListener('DOMContentLoaded', () => {
+  var elems = document.querySelectorAll('.sidenav');
+  M.Sidenav.init(elems, {});
+});
+
+const getBaseUrl = () => {
+  if (process.env.NODE_ENV === 'development') {
+    return `http://${window.location.hostname}:8080`;
+  } else {
+    return `https://api.${window.location.hostname}`;
+  }
+}
+
+// Load the YouTube player without a specific video.
 window.onYouTubeIframeAPIReady = function () {
-  // if (window.ytPlayer) {
-  //   window.ytPlayer.destroy();
-  // }
   window.ytPlayer = new YT.Player('player', {
     events: {
       onError: console.error,
@@ -43,49 +55,36 @@ window.loadVideo = function (videoId, timestamp) {
 
 window.submitSearch = () => {
   const searchValue = document.getElementById('search').value;
-  const searchQuery = new XMLHttpRequest();
-  if (process.env.NODE_ENV === 'development') {
-    searchQuery.open('GET', `http://${window.location.hostname}:8080/youtube/${searchValue}`);
-  } else {
-    searchQuery.open('GET', `https://api.${window.location.hostname}/youtube/${searchValue}`);
-  }
+  document.searchResultList = document.searchResultList || [];
 
+  const req = new Request(`${getBaseUrl()}/youtube/${searchValue}`, 'GET');
 
-  if(document.elem_bak == undefined) {
-    document.elem_bak = []
-  }
-
-  document.elem_bak.forEach(elem => elem.remove())
-
-  searchQuery.onload = () => {
-    JSON.parse(searchQuery.responseText).items.forEach(item => {
+  const showSearchResults = result => {
+    document.searchResultList.forEach(elem => elem.remove());
+    result.items.forEach(item => {
       li = document.createElement('li');
       li.innerHTML = `<button class="row result waves-effect waves-dark btn black-text white"><div class="center-align col s12">${item.snippet.channelTitle}</div><div class="divider col s12"></div><div class="valign-wrapper snippet col s7"><div class="center-align">${item.snippet.title}</div></div><div class="col s5"><img src=${item.snippet.thumbnails.default.url}></div></button>`;
       li.onclick = () => {
         loadVideo(item.id.videoId);
         M.Sidenav.getInstance(document.getElementById("slide-out")).close();
       };
-      document.elem_bak.push(li);
+      document.searchResultList.push(li);
       document.getElementById('slide-out').appendChild(li);
     });
   };
 
-  searchQuery.onerror = () => {
-    // console.log(test_data.items);
-
-    // test_data.items.forEach(item => {
-    //   li = document.createElement('li');
-    //   li.innerHTML = `<button class="row result waves-effect waves-dark btn black-text white"><div class="center-align col s12">${item.snippet.channelTitle}</div><div class="divider col s12"></div><div class="valign-wrapper snippet col s7"><div class="center-align">${item.snippet.title}</div></div><div class="col s5"><img src=${item.snippet.thumbnails.default.url}></div></button>`;
-    //   li.onclick = () => {
-    //     loadVideo(item.id.videoId);
-    //     M.Sidenav.getInstance(document.getElementById("slide-out")).close();
-    //   };
-    //   document.elem_bak.push(li);
-    //   document.getElementById('slide-out').appendChild(li);
-    // });
-    console.error(searchQuery.statusText);
-  };
-  searchQuery.send(null); 
+  req.send().then(result => {
+    console.log(result);
+    showSearchResults(result);
+  }).catch(err => {
+    console.log(err);
+    if (process.env.NODE_ENV === 'development') {
+      // Assume error is due to not having running server, and return test data
+      showSearchResults(testData);
+    } else {
+      console.error(err);
+    }
+  });
   return false;
 };
 
@@ -97,24 +96,13 @@ window.onPlayerReady = () => {
 
   if (!window.roomId) {
     // create a new room
-    var roomRequest = new XMLHttpRequest();
-    if (process.env.NODE_ENV === 'development') {
-      roomRequest.open('POST', `http://${window.location.hostname}:8080/rooms/new`);
-    } else {
-      roomRequest.open('POST', `https://api.${window.location.hostname}/rooms/new`);
-    }
+    const req = new Request(`${getBaseUrl()}/rooms/new`, 'POST');
 
-    roomRequest.onload = () => {
-      window.roomId = roomRequest.responseText;
+    req.send().then(response => {
+      window.roomId = response;
       window.history.pushState(window.data, window.title, `/?${window.roomId}`);
       window.onRoomId();
-    };
-
-    roomRequest.onerror = function (e) {
-      console.error(roomRequest.statusText);
-    };
-
-    roomRequest.send(null);
+    }).catch(console.error);
   }
 };
 

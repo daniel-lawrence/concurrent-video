@@ -24,6 +24,7 @@ type roomState struct {
 	VideoURL     string   `json:"videoURL,omitempty"`
 	CurrentState int      `json:"currentState,omitempty"`
 	TimeStamp    float64  `json:"timeStamp,omitempty"`
+	WatcherCount int      `json:"watcherCount,omitempty"`
 	UIDs         []string `json:"uids,omitempty"`
 }
 
@@ -52,8 +53,6 @@ func newRoom() (id string) {
 		id = strings.ReplaceAll(strings.Title(id), " ", "")
 	}
 
-	// log.Printf(strings.Join(list,""))
-	// id = uuid.NewV4().String() // TODO: replace with random words
 	room := sharedRoom{
 		roomState: roomState{
 			CurrentState: playerUnstarted,
@@ -119,11 +118,12 @@ func (r *sharedRoom) communicateState(conn *websocket.Conn) {
 			// take room state lock
 			r.stateLock.Lock()
 			r.roomState = stateUpdate
+			r.roomState.WatcherCount = len(r.connected)
 			for i, otherClient := range r.connected {
 				if conn == otherClient {
 					continue
 				}
-				err = otherClient.WriteJSON(stateUpdate)
+				err = otherClient.WriteJSON(r.roomState)
 				if err != nil {
 					log.Printf("Error updating other client state: %v\n", err)
 					r.connected = append(r.connected[:i], r.connected[i+1:]...)

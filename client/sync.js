@@ -19,6 +19,9 @@ class VideoSync {
 
   setState(state) {
     console.log('STATE: setting state', state);
+    if (state.watcherCount) {
+      document.getElementById('viewer-count-display').innerHTML = `${state.watcherCount} watching now`;
+    }
     if (!(window.ytPlayer && window.ytPlayer.getPlayerState)) {
       window.loadVideo(state.videoURL, state.timeStamp);
       return;

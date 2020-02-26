@@ -29,6 +29,11 @@
   margin: 0 8 0 0;
 }
 
+#viewer-count-display {
+  margin: 5em 0;
+  color: #AAAAAA;
+}
+
 .result {
   line-height: normal;
   border-left: 5px solid #ee6e73;

@@ -1,16 +1,19 @@
 class VideoSync {
+  constructor () {
+    this.recentUpdate = false;
+    this.lastState = null;
+  }
+
   getState() {
     if (!(window.ytPlayer && window.ytPlayer.getPlayerState)) {
       return;
     }
-    let playerState = window.ytPlayer.getPlayerState();
-    if (playerState == -1) {
-      playerState = 2;
-    }
+    const playerState = window.ytPlayer.getPlayerState();
+    const playing = (playerState === 1);
 
     const foundState = {
       videoURL: window.ytPlayer.videoId,
-      currentState: playerState,
+      playing,
       timeStamp: window.ytPlayer.getCurrentTime(),
     };
     console.log('getState got:', foundState);
@@ -19,6 +22,7 @@ class VideoSync {
 
   setState(state) {
     console.log('STATE: setting state', state);
+    this.recentUpdate = true;
     if (state.watcherCount) {
       document.getElementById('viewer-count-display').innerHTML = `${state.watcherCount} watching now`;
     }
@@ -28,9 +32,12 @@ class VideoSync {
     }
 
     const playerState = window.ytPlayer.getPlayerState();
-    if (playerState != 1 && state.currentState == 1) {
+    if (state.playing && playerState !== 1) {
+      console.log('Triggering play');
+      window.ytPlayer.seekTo(state.timeStamp, true);
       window.ytPlayer.playVideo();
-    } else if (playerState == 1 && (state.currentState == 2 || state.currentState == 0 || state.currentState == -1)) {
+    } else if (!state.playing && playerState !== 3) {
+      console.log('Triggering pause');
       window.ytPlayer.pauseVideo();
     }
 
@@ -43,14 +50,22 @@ class VideoSync {
       window.loadVideo(state.videoURL, state.timeStamp);
     }
 
-    window.ytPlayer.preventStateUpdates = false;
+    setTimeout(() => {
+      console.log(`setting recentUpdate (${this.recentUpdate}) to false`);
+      this.recentUpdate = false;
+      console.log(this.recentUpdate);
+    }, 500);
   }
 
   onPlayerStateChange(event) {
-    if (window.syncSocket) {
-      const newState = window.ytPlayer.videoSync.getState();
-      window.syncSocket.send(JSON.stringify(newState));
+    console.log('event:', event);
+    if (this.recentUpdate || !window.syncSocket) {
+      return;
     }
+
+    console.log(`current player state: ${window.ytPlayer.getPlayerState()}`);
+    const newState = window.ytPlayer.videoSync.getState();
+    window.syncSocket.send(JSON.stringify(newState));
   }
 }
 

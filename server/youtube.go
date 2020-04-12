@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -21,8 +22,14 @@ func init() {
 }
 
 func searchVideos(query string) ([]byte, error) {
+	// return error for testing
+	return nil, errors.New("Some error")
+
 	ctx := context.Background()
 	youtubeService, err := youtube.NewService(ctx, option.WithAPIKey(gapiKey))
+
+	// if query looks like a video/channel/playlist ID, get video data for $query
+	// if error, or not ID, search youtube for string
 	if err != nil {
 		return nil, err
 	}

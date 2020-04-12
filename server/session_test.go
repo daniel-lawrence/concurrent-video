@@ -41,9 +41,9 @@ func TestRoomSync(t *testing.T) {
 
 	// write status update to client 1
 	roomUpdate := roomState{
-		VideoURL:     "http://youtube.com/whatever",
-		CurrentState: playerPlaying,
-		TimeStamp:    60,
+		VideoURL:  "http://youtube.com/whatever",
+		Playing:   true,
+		TimeStamp: 60,
 	}
 	err = client1.WriteJSON(roomUpdate)
 	if err != nil {

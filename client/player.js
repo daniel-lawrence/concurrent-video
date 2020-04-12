@@ -32,6 +32,9 @@ const getBaseUrl = () => {
 // Load the YouTube player without a specific video.
 window.onYouTubeIframeAPIReady = function () {
   window.ytPlayer = new YT.Player('player', {
+    playerVars: {
+      autoplay: 0,
+    },
     events: {
       onError: console.error,
     }
